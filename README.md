@@ -2,13 +2,10 @@
 Hey everyone, I'm Harshit. Here, I proudly present to you my masterpiece, the Harshit WebOS v1.0
 
 ## How to Use
-Harshit WebOS will have a loading screen, and after that, it will start the whole thing. A welcome.txt will appear. It can be later accesed via the 'my files' app. To open an app, you could just click on one and it'll open. And to open files you can double click them in the file explorer.
+Harshit WebOS will have a loading screen, and after that, it will start the whole thing. A welcome.txt will appear. It can be later accesed via the 'File Nest' app. To open an app, you could just click on one and it'll open. And to open files you can double click them in the file explorer.
 
 ### Easter Egg
-If you switch your settings in the Tweak app to year to 2007, you'll see some errors and then you'll be greeted with fireworks and an end screen. The idea of this is from the Harshit bug, also the name of this webOS.
-
-### Bugs you may Encounter
-So, the I hosted the chat thing on Render, so it may get inactive and won't work sometimes, but get patient and the server would probably work after some time.
+If you switch your settings in the Tweak app to year to 2007, you'll see some errors and then you'll be greeted with fireworks and an end screen. The idea of this is from the Harshit WebOS bug, also the name of this webOS.
 
 ---
 
@@ -17,7 +14,6 @@ So, the I hosted the chat thing on Render, so it may get inactive and won't work
 
 ### Cool Facts
 - i took the background picture When I Vist the Pradhanmantri Sangrahalaya
-- Intentional lag
 - Retrooo theme
 
 ### Tech Stack
