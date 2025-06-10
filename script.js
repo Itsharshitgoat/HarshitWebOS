@@ -65,6 +65,112 @@ const fileSystem = new FileSystem();
 
 class AppManager {
     static apps = {
+        "File Nest": {
+            create: () => {
+                const structure = fileSystem.getStructure();
+
+                return `
+                    <div class="file-explorer">
+                        ${Object.entries(structure)
+                        .map(
+                            ([folder, data]) => `
+                            <div class="folder">
+                                <div class="folder-header">
+                                    <img src="icons/file.png" width="32" height="32">
+                                    <span>${folder}</span>
+                            </div>
+                                <div class="folder-content">
+                                    ${Object.entries(data.content)
+                                    .map(
+                                        ([filename, file]) => `
+                                        <div class="file-item" data-path="${folder}/${filename}">
+                                            <img src="${filename
+                                                .toLowerCase()
+                                                .endsWith(".png")
+                                                ? "icons/picture.png"
+                                                : "icons/notepad.png"
+                                            }" width="32" height="32">
+                                            <span>${filename}</span>
+                                        </div>
+                                    `
+                                    )
+                                    .join("")}
+                                </div>
+                            </div>
+                        `
+                        )
+                        .join("")}
+                    </div>`;
+            },
+            init: (window) => {
+                const fileList = window.querySelector(".file-explorer");
+
+                fileList.addEventListener("dblclick", (e) => {
+                    const fileItem = e.target.closest(".file-item");
+                    if (fileItem) {
+                        const path = fileItem.dataset.path;
+                        const [folder, ...rest] = path.split("/");
+                        const filename = rest.join("/");
+
+                        const extension = filename.split(".").pop().toLowerCase();
+                        const imageExtensions = ["png", "jpg", "jpeg", "gif", "bmp"];
+                        const textExtensions = ["txt", "md", "js", "html", "css"];
+
+                        if (imageExtensions.includes(extension)) {
+                            const imageSrc = fileSystem.loadFile(path);
+                            const imageViewerContent =
+                                AppManager.apps["Image Viewer"].create(imageSrc);
+                            windowManager.createWindow(filename, imageViewerContent);
+                        } else if (textExtensions.includes(extension)) {
+                            const notepadContent = AppManager.apps.Notepad.create();
+                            const notepadWindow = windowManager.createWindow(
+                                filename,
+                                notepadContent
+                            );
+                            AppManager.apps.Notepad.init(notepadWindow, true);
+                            const textarea = notepadWindow.querySelector(".notepad-content");
+                            textarea.value = fileSystem.loadFile(path);
+                        }
+                    }
+                });
+            },
+        },
+        "Web Start": {
+            create: () => {
+                return `
+    <div class="retro-browser">
+        <div class="browser-banner">
+            <img src="browserbanner.png" alt="Browser Banner" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div class="browser-toolbar">
+            <input type="text" class="search-bar" placeholder="Search the web..." />
+            <button class="search-btn">Search</button>
+        </div>
+    </div>
+`;
+            },
+            init: (appWindow) => {
+                const searchBtn = appWindow.querySelector(".search-btn");
+                const searchBar = appWindow.querySelector(".search-bar");
+
+                searchBtn.onclick = () => {
+                    const query = searchBar.value.trim();
+                    if (query === "") {
+                        showModal(`
+                <h3>Error</h3>
+                <p>Please enter a search query.</p>
+                <button id="modal-close-btn">Close</button>
+              `);
+                        document.getElementById("modal-close-btn").onclick = hideModal;
+                        return;
+                    }
+
+                    const url =
+                        "https://duckduckgo.com/?q=" + encodeURIComponent(query);
+                    window.open(url, "_blank");
+                };
+            },
+        },
         "Text Pad": {
             create: () => {
                 return `
@@ -127,6 +233,54 @@ class AppManager {
                         }
                     };
                 };
+            },
+        },
+        "NumPad": {
+            create: () => {
+                return `
+            <div class="calculator">
+                <input type="text" class="calc-display" readonly value="0">
+                <div class="calc-buttons">
+                    ${[7, 8, 9, "+"]
+                        .map(
+                            (btn) =>
+                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
+                        )
+                        .join("")}
+                    <br>
+                    ${[4, 5, 6, "-"]
+                        .map(
+                            (btn) =>
+                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
+                        )
+                        .join("")}
+                    <br>
+                    ${[1, 2, 3, "*"]
+                        .map(
+                            (btn) =>
+                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
+                        )
+                        .join("")}
+                    <br>
+                    ${[0, "C", "=", "/"]
+                        .map(
+                            (btn) =>
+                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
+                        )
+                        .join("")}
+                        </div>
+                    </div>`;
+            },
+            init: (window) => {
+                const display = window.querySelector(".calc-display");
+                const calculator = new Calculator();
+
+                window.querySelectorAll(".calc-btn").forEach((btn) => {
+                    btn.addEventListener("click", () => {
+                        const value = btn.dataset.value;
+                        display.value = calculator.handleInput(value);
+                    });
+                });
             },
         },
         "Canvas": {
@@ -231,159 +385,118 @@ class AppManager {
                 };
             },
         },
-        "NumPad": {
+        "Timer": {
             create: () => {
                 return `
-            <div class="calculator">
-                <input type="text" class="calc-display" readonly value="0">
-                <div class="calc-buttons">
-                    ${[7, 8, 9, "+"]
-                        .map(
-                            (btn) =>
-                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
-                        )
-                        .join("")}
-                    <br>
-                    ${[4, 5, 6, "-"]
-                        .map(
-                            (btn) =>
-                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
-                        )
-                        .join("")}
-                    <br>
-                    ${[1, 2, 3, "*"]
-                        .map(
-                            (btn) =>
-                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
-                        )
-                        .join("")}
-                    <br>
-                    ${[0, "C", "=", "/"]
-                        .map(
-                            (btn) =>
-                                `<button class="calc-btn" data-value="${btn}">${btn}</button>`
-                        )
-                        .join("")}
-                        </div>
-                    </div>`;
+            <div class="timer-app">
+                <div class="timer-display">
+                    <span id="minutes">00</span>:<span id="seconds">00</span>
+                </div>
+                <div class="timer-controls">
+                    <div class="timer-input">
+                        <label>Minutes:</label>
+                        <input type="number" id="set-minutes" min="0" max="99" value="0">
+                    </div>
+                    <div class="timer-buttons">
+                        <button id="start-timer" class="timer-btn">Start</button>
+                        <button id="pause-timer" class="timer-btn" disabled>Pause</button>
+                        <button id="reset-timer" class="timer-btn">Reset</button>
+                    </div>
+                </div>
+                <div class="timer-presets">
+                    <button class="preset-btn" data-minutes="1">1m</button>
+                    <button class="preset-btn" data-minutes="3">3m</button>
+                    <button class="preset-btn" data-minutes="5">5m</button>
+                    <button class="preset-btn" data-minutes="10">10m</button>
+                </div>
+            </div>`;
             },
             init: (window) => {
-                const display = window.querySelector(".calc-display");
-                const calculator = new Calculator();
+                const minutesDisplay = window.querySelector("#minutes");
+                const secondsDisplay = window.querySelector("#seconds");
+                const minutesInput = window.querySelector("#set-minutes");
+                const startBtn = window.querySelector("#start-timer");
+                const pauseBtn = window.querySelector("#pause-timer");
+                const resetBtn = window.querySelector("#reset-timer");
+                const presetBtns = window.querySelectorAll(".preset-btn");
 
-                window.querySelectorAll(".calc-btn").forEach((btn) => {
+                let timeLeft = 0;
+                let timerId = null;
+                let isPaused = false;
+
+                function updateDisplay(totalSeconds) {
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+                    minutesDisplay.textContent = minutes.toString().padStart(2, '0');
+                    secondsDisplay.textContent = seconds.toString().padStart(2, '0');
+                }
+
+                function startTimer() {
+                    if (timeLeft === 0) {
+                        timeLeft = parseInt(minutesInput.value) * 60;
+                    }
+
+                    if (timeLeft > 0 && !timerId) {
+                        startBtn.disabled = true;
+                        pauseBtn.disabled = false;
+                        minutesInput.disabled = true;
+
+                        timerId = setInterval(() => {
+                            timeLeft--;
+                            updateDisplay(timeLeft);
+
+                            if (timeLeft === 0) {
+                                clearInterval(timerId);
+                                timerId = null;
+                                const alarm = new Audio("sfx/error.mp3");
+                                alarm.play();
+                                showModal(`
+                            <h3>Time's Up!</h3>
+                            <p>Timer has finished.</p>
+                            <button id="modal-close-btn">Close</button>
+                        `);
+                                document.getElementById("modal-close-btn").onclick = hideModal;
+                                resetTimer();
+                            }
+                        }, 1000);
+                    }
+                }
+
+                function pauseTimer() {
+                    if (timerId) {
+                        clearInterval(timerId);
+                        timerId = null;
+                        startBtn.disabled = false;
+                        startBtn.textContent = "Resume";
+                        pauseBtn.disabled = true;
+                        isPaused = true;
+                    }
+                }
+
+                function resetTimer() {
+                    clearInterval(timerId);
+                    timerId = null;
+                    timeLeft = 0;
+                    updateDisplay(0);
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Start";
+                    pauseBtn.disabled = true;
+                    minutesInput.disabled = false;
+                    minutesInput.value = "0";
+                    isPaused = false;
+                }
+
+                startBtn.addEventListener("click", startTimer);
+                pauseBtn.addEventListener("click", pauseTimer);
+                resetBtn.addEventListener("click", resetTimer);
+
+                presetBtns.forEach(btn => {
                     btn.addEventListener("click", () => {
-                        const value = btn.dataset.value;
-                        display.value = calculator.handleInput(value);
+                        minutesInput.value = btn.dataset.minutes;
+                        resetTimer();
                     });
                 });
-            },
-        },
-        "Web Start": {
-            create: () => {
-                return `
-    <div class="retro-browser">
-        <div class="browser-banner">
-            <img src="browserbanner.png" alt="Browser Banner" style="width:100%; height:100%; object-fit:cover;">
-        </div>
-        <div class="browser-toolbar">
-            <input type="text" class="search-bar" placeholder="Search the web..." />
-            <button class="search-btn">Search</button>
-        </div>
-    </div>
-`;
-            },
-            init: (appWindow) => {
-                const searchBtn = appWindow.querySelector(".search-btn");
-                const searchBar = appWindow.querySelector(".search-bar");
-
-                searchBtn.onclick = () => {
-                    const query = searchBar.value.trim();
-                    if (query === "") {
-                        showModal(`
-                <h3>Error</h3>
-                <p>Please enter a search query.</p>
-                <button id="modal-close-btn">Close</button>
-              `);
-                        document.getElementById("modal-close-btn").onclick = hideModal;
-                        return;
-                    }
-
-                    const url =
-                        "https://duckduckgo.com/?q=" + encodeURIComponent(query);
-                    window.open(url, "_blank");
-                };
-            },
-        },
-        "File Nest": {
-            create: () => {
-                const structure = fileSystem.getStructure();
-
-                return `
-                    <div class="file-explorer">
-                        ${Object.entries(structure)
-                        .map(
-                            ([folder, data]) => `
-                            <div class="folder">
-                                <div class="folder-header">
-                                    <img src="icons/file.png" width="32" height="32">
-                                    <span>${folder}</span>
-                            </div>
-                                <div class="folder-content">
-                                    ${Object.entries(data.content)
-                                    .map(
-                                        ([filename, file]) => `
-                                        <div class="file-item" data-path="${folder}/${filename}">
-                                            <img src="${filename
-                                                .toLowerCase()
-                                                .endsWith(".png")
-                                                ? "icons/picture.png"
-                                                : "icons/notepad.png"
-                                            }" width="32" height="32">
-                                            <span>${filename}</span>
-                                        </div>
-                                    `
-                                    )
-                                    .join("")}
-                                </div>
-                            </div>
-                        `
-                        )
-                        .join("")}
-                    </div>`;
-            },
-            init: (window) => {
-                const fileList = window.querySelector(".file-explorer");
-
-                fileList.addEventListener("dblclick", (e) => {
-                    const fileItem = e.target.closest(".file-item");
-                    if (fileItem) {
-                        const path = fileItem.dataset.path;
-                        const [folder, ...rest] = path.split("/");
-                        const filename = rest.join("/");
-
-                        const extension = filename.split(".").pop().toLowerCase();
-                        const imageExtensions = ["png", "jpg", "jpeg", "gif", "bmp"];
-                        const textExtensions = ["txt", "md", "js", "html", "css"];
-
-                        if (imageExtensions.includes(extension)) {
-                            const imageSrc = fileSystem.loadFile(path);
-                            const imageViewerContent =
-                                AppManager.apps["Image Viewer"].create(imageSrc);
-                            windowManager.createWindow(filename, imageViewerContent);
-                        } else if (textExtensions.includes(extension)) {
-                            const notepadContent = AppManager.apps.Notepad.create();
-                            const notepadWindow = windowManager.createWindow(
-                                filename,
-                                notepadContent
-                            );
-                            AppManager.apps.Notepad.init(notepadWindow, true);
-                            const textarea = notepadWindow.querySelector(".notepad-content");
-                            textarea.value = fileSystem.loadFile(path);
-                        }
-                    }
-                });
-            },
+            }
         },
         "Gallery": {
             create: (imageSrc) => {
@@ -567,92 +680,116 @@ class AppManager {
         Messenger: {
             create: () => {
                 return `
-            <div class="contact-form">
-                <h2>Send a Message</h2>
+        <div class="messenger-app">
+            <div class="messenger-box">
+                <div class="messenger-title">New Message</div>
                 <form action="https://formsubmit.co/itsharshitgoat@gmail.com" method="POST">
-                    <div class="form-group">
-                        <label for="name">Name:</label>
+                    <div class="messenger-input-group">
+                        <label for="name">From:</label>
                         <input type="text" id="name" name="name" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="email">Email:</label>
+                    <div class="messenger-input-group">
+                        <label for="email">Reply To:</label>
                         <input type="email" id="email" name="email" required>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="messenger-input-group">
                         <label for="message">Message:</label>
-                        <textarea id="message" name="message" rows="4" required></textarea>
+                        <textarea id="message" name="message" rows="6" required></textarea>
                     </div>
                     
-                    <button type="submit" class="submit-btn">Send Message</button>
+                    <button type="submit" class="messenger-btn">Send Message</button>
                 </form>
-            </div>`;
+            </div>
+        </div>`;
             },
             init: (window) => {
-                // Add this CSS to style the form
                 const style = document.createElement('style');
                 style.textContent = `
-            .contact-form {
-                padding: 20px;
-                max-width: 500px;
-                margin: 0 auto;
+            .messenger-app {
+                padding: 15px;
+                background: var(--window-bg);
+                font-family: 'MS Sans Serif', sans-serif;
+                color: #000;
             }
-            
-            .contact-form h2 {
-                text-align: center;
-                margin-bottom: 20px;
-                color: #333;
+
+            .messenger-box {
+                border: 2px solid var(--button-color);
+                background: #fff;
+                box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888;
             }
-            
-            .form-group {
-                margin-bottom: 15px;
+
+            .messenger-title {
+                background: var(--window-title-color);
+                color: white;
+                padding: 6px 10px;
+                font-weight: bold;
+                text-shadow: 1px 1px #000;
             }
-            
-            .form-group label {
+
+            .messenger-input-group {
+                margin: 15px;
+            }
+
+            .messenger-input-group label {
                 display: block;
                 margin-bottom: 5px;
-                color: #555;
+                font-weight: bold;
             }
-            
-            .form-group input,
-            .form-group textarea {
-                width: 100%;
+
+            .messenger-input-group input,
+            .messenger-input-group textarea {
+                width: calc(100% - 16px);
                 padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
+                border: 2px inset #fff;
+                background: #fff;
+                font-family: 'MS Sans Serif', sans-serif;
+                font-size: 14px;
+                box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+            }
+
+            .messenger-input-group textarea {
+                resize: vertical;
+                min-height: 100px;
+            }
+
+            .messenger-btn {
+                margin: 15px;
+                padding: 8px 16px;
+                background: var(--button-color);
+                border: 2px outset #fff;
+                color: #000;
+                font-family: 'MS Sans Serif', sans-serif;
+                font-weight: bold;
+                cursor: pointer;
+                width: calc(100% - 30px);
+                text-align: center;
                 font-size: 14px;
             }
-            
-            .form-group textarea {
-                resize: vertical;
+
+            .messenger-btn:hover {
+                background: var(--window-title-color);
+                color: #fff;
             }
-            
-            .submit-btn {
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                width: 100%;
-                font-size: 16px;
-                transition: background-color 0.3s;
-            }
-            
-            .submit-btn:hover {
-                background-color: #45a049;
+
+            .messenger-btn:active {
+                border-style: inset;
+                padding: 9px 15px 7px 17px;
             }
         `;
                 document.head.appendChild(style);
 
-                // Get the form element
                 const form = window.querySelector('form');
-                
-                // Add form submission handler
                 form.addEventListener('submit', (e) => {
-                    // FormSubmit will handle the form submission
-                    // You can add additional validation or feedback here if needed
+                    e.preventDefault();
+                    form.submit();
+                    showModal(`
+                <h3>Message Sent!</h3>
+                <p>Your message has been sent successfully.</p>
+                <button id="modal-close-btn">Close</button>
+            `);
+                    document.getElementById("modal-close-btn").onclick = hideModal;
                 });
             }
         },
@@ -1006,6 +1143,271 @@ class AppManager {
                 }
             },
         },
+        "Timer": {
+            create: () => {
+                return `
+            <div class="timer-app">
+                <div class="timer-display">
+                    <span id="minutes">00</span>:<span id="seconds">00</span>
+                </div>
+                <div class="timer-controls">
+                    <div class="timer-input">
+                        <label>Minutes:</label>
+                        <input type="number" id="set-minutes" min="0" max="99" value="0">
+                    </div>
+                    <div class="timer-buttons">
+                        <button id="start-timer" class="timer-btn">Start</button>
+                        <button id="pause-timer" class="timer-btn" disabled>Pause</button>
+                        <button id="reset-timer" class="timer-btn">Reset</button>
+                    </div>
+                </div>
+                <div class="timer-presets">
+                    <button class="preset-btn" data-minutes="1">1m</button>
+                    <button class="preset-btn" data-minutes="3">3m</button>
+                    <button class="preset-btn" data-minutes="5">5m</button>
+                    <button class="preset-btn" data-minutes="10">10m</button>
+                </div>
+            </div>`;
+            },
+            init: (window) => {
+                const minutesDisplay = window.querySelector("#minutes");
+                const secondsDisplay = window.querySelector("#seconds");
+                const minutesInput = window.querySelector("#set-minutes");
+                const startBtn = window.querySelector("#start-timer");
+                const pauseBtn = window.querySelector("#pause-timer");
+                const resetBtn = window.querySelector("#reset-timer");
+                const presetBtns = window.querySelectorAll(".preset-btn");
+
+                let timeLeft = 0;
+                let timerId = null;
+                let isPaused = false;
+
+                function updateDisplay(totalSeconds) {
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+                    minutesDisplay.textContent = minutes.toString().padStart(2, '0');
+                    secondsDisplay.textContent = seconds.toString().padStart(2, '0');
+                }
+
+                function startTimer() {
+                    if (timeLeft === 0) {
+                        timeLeft = parseInt(minutesInput.value) * 60;
+                    }
+
+                    if (timeLeft > 0 && !timerId) {
+                        startBtn.disabled = true;
+                        pauseBtn.disabled = false;
+                        minutesInput.disabled = true;
+
+                        timerId = setInterval(() => {
+                            timeLeft--;
+                            updateDisplay(timeLeft);
+
+                            if (timeLeft === 0) {
+                                clearInterval(timerId);
+                                timerId = null;
+                                const alarm = new Audio("sfx/error.mp3");
+                                alarm.play();
+                                showModal(`
+                            <h3>Time's Up!</h3>
+                            <p>Timer has finished.</p>
+                            <button id="modal-close-btn">Close</button>
+                        `);
+                                document.getElementById("modal-close-btn").onclick = hideModal;
+                                resetTimer();
+                            }
+                        }, 1000);
+                    }
+                }
+
+                function pauseTimer() {
+                    if (timerId) {
+                        clearInterval(timerId);
+                        timerId = null;
+                        startBtn.disabled = false;
+                        startBtn.textContent = "Resume";
+                        pauseBtn.disabled = true;
+                        isPaused = true;
+                    }
+                }
+
+                function resetTimer() {
+                    clearInterval(timerId);
+                    timerId = null;
+                    timeLeft = 0;
+                    updateDisplay(0);
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Start";
+                    pauseBtn.disabled = true;
+                    minutesInput.disabled = false;
+                    minutesInput.value = "0";
+                    isPaused = false;
+                }
+
+                startBtn.addEventListener("click", startTimer);
+                pauseBtn.addEventListener("click", pauseTimer);
+                resetBtn.addEventListener("click", resetTimer);
+
+                presetBtns.forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        minutesInput.value = btn.dataset.minutes;
+                        resetTimer();
+                    });
+                });
+            }
+        },
+        "Tunebox": {
+            create: () => {
+                return `
+                <div class="music-player">
+                    <div class="player-info">
+                        <div class="track-art"></div>
+                        <div class="track-info">
+                            <div class="track-name">Select a track</div>
+                            <div class="track-artist">Tunebox</div>
+                        </div>
+                    </div>
+                    <div class="player-controls">
+                        <div class="control-buttons">
+                            <button class="prev-btn">⏮</button>
+                            <button class="play-btn">▶</button>
+                            <button class="next-btn">⏭</button>
+                        </div>
+                        <div class="progress-area">
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                            <div class="time">
+                                <span class="current">0:00</span>
+                                <span class="duration">0:00</span>
+                            </div>
+                        </div>
+                        <div class="volume-control">
+                            <span>🔊</span>
+                            <input type="range" min="0" max="100" value="100" class="volume-slider">
+                        </div>
+                    </div>
+                    <div class="playlist">
+                        <div class="playlist-item" data-track="music/track1.mp3">Track 1</div>
+                        <div class="playlist-item" data-track="music/track2.mp3">Track 2</div>
+                        <div class="playlist-item" data-track="music/track3.mp3">Track 3</div>
+                    </div>
+                </div>`;
+            },
+            init: (window) => {
+                const player = window.querySelector('.music-player');
+                const audio = new Audio();
+                const playBtn = player.querySelector('.play-btn');
+                const prevBtn = player.querySelector('.prev-btn');
+                const nextBtn = player.querySelector('.next-btn');
+                const trackName = player.querySelector('.track-name');
+                const progress = player.querySelector('.progress');
+                const progressBar = player.querySelector('.progress-bar');
+                const currentTime = player.querySelector('.current');
+                const duration = player.querySelector('.duration');
+                const volumeSlider = player.querySelector('.volume-slider');
+                const playlist = player.querySelector('.playlist');
+                
+                let isPlaying = false;
+                let currentTrack = 0;
+                const tracks = Array.from(player.querySelectorAll('.playlist-item'));
+
+                // Style for active track
+                function updateActiveTrack() {
+                    tracks.forEach(track => track.classList.remove('active'));
+                    tracks[currentTrack].classList.add('active');
+                }
+
+                // Play/Pause function
+                function togglePlay() {
+                    if (isPlaying) {
+                        audio.pause();
+                        playBtn.textContent = '▶';
+                    } else {
+                        audio.play();
+                        playBtn.textContent = '⏸';
+                    }
+                    isPlaying = !isPlaying;
+                }
+
+                // Load and play track
+                function loadTrack(trackIndex) {
+                    const track = tracks[trackIndex];
+                    audio.src = track.dataset.track;
+                    trackName.textContent = track.textContent;
+                    audio.load();
+                    if (isPlaying) {
+                        audio.play();
+                    }
+                    updateActiveTrack();
+                }
+
+                // Event listeners
+                playBtn.addEventListener('click', togglePlay);
+
+                prevBtn.addEventListener('click', () => {
+                    currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
+                    loadTrack(currentTrack);
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    currentTrack = (currentTrack + 1) % tracks.length;
+                    loadTrack(currentTrack);
+                });
+
+                // Playlist click handler
+                playlist.addEventListener('click', (e) => {
+                    const trackItem = e.target.closest('.playlist-item');
+                    if (trackItem) {
+                        currentTrack = tracks.indexOf(trackItem);
+                        loadTrack(currentTrack);
+                        if (!isPlaying) {
+                            togglePlay();
+                        }
+                    }
+                });
+
+                // Progress bar handling
+                progressBar.addEventListener('click', (e) => {
+                    const width = progressBar.clientWidth;
+                    const clickX = e.offsetX;
+                    const duration = audio.duration;
+                    audio.currentTime = (clickX / width) * duration;
+                });
+
+                // Volume control
+                volumeSlider.addEventListener('input', (e) => {
+                    audio.volume = e.target.value / 100;
+                });
+
+                // Audio event listeners
+                audio.addEventListener('timeupdate', () => {
+                    const currentTimeVal = audio.currentTime;
+                    const durationVal = audio.duration;
+                    
+                    const progressPercent = (currentTimeVal / durationVal) * 100;
+                    progress.style.width = `${progressPercent}%`;
+
+                    const currentMin = Math.floor(currentTimeVal / 60);
+                    const currentSec = Math.floor(currentTimeVal % 60);
+                    currentTime.textContent = `${currentMin}:${currentSec.toString().padStart(2, '0')}`;
+
+                    if (!isNaN(durationVal)) {
+                        const durationMin = Math.floor(durationVal / 60);
+                        const durationSec = Math.floor(durationVal % 60);
+                        duration.textContent = `${durationMin}:${durationSec.toString().padStart(2, '0')}`;
+                    }
+                });
+
+                audio.addEventListener('ended', () => {
+                    currentTrack = (currentTrack + 1) % tracks.length;
+                    loadTrack(currentTrack);
+                });
+
+                // Load first track
+                loadTrack(currentTrack);
+            }
+        },
     };
 }
 
@@ -1172,6 +1574,14 @@ class WindowManager {
     setupControls(win) {
         win.querySelector(".close-button").onclick = () => {
             const title = this.windows.get(win);
+            if (title === "Tunebox") {
+                const audio = win.querySelector('.music-player audio') || 
+                             Array.from(win.querySelectorAll('audio')).pop();
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            }
             win.remove();
             this.windows.delete(win);
             const icon = document.querySelector(`.icon[data-app="${title}"]`);
@@ -1209,6 +1619,8 @@ const desktopIcons = [
     { name: "Arcade", icon: "icons/snake.png" },
     { name: "Tweak", icon: "icons/gear.png" },
     { name: "Messenger", icon: "icons/chat.png" },
+    { name: "Timer", icon: "icons/time.png" },
+    { name: "Tunebox", icon: "icons/music.png" },
 ];
 
 const iconsPerColumn = 5;

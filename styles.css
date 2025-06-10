@@ -579,3 +579,201 @@ textarea:focus {
     border-color: #808080 #fff #fff #808080;
     padding-top: 2px;
 }
+.timer-app {
+    padding: 20px;
+    text-align: center;
+    font-family: 'Tiny5', sans-serif;
+    background: #f0f0f0;
+    height: 100%;
+}
+
+.timer-display {
+    font-size: 48px;
+    font-weight: bold;
+    background: #000;
+    color: #0f0;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-family: 'Tiny5', sans-serif;
+    text-shadow: 0 0 5px #0f0;
+}
+
+.timer-controls {
+    margin-bottom: 20px;
+}
+
+.timer-input {
+    margin-bottom: 15px;
+}
+
+.timer-input label {
+    margin-right: 10px;
+    font-family: 'Tiny5', sans-serif;
+    font-size: 14px;
+}
+
+.timer-input input {
+    width: 60px;
+    padding: 5px;
+    font-size: 16px;
+    text-align: center;
+    border: 2px solid #999;
+    border-radius: 3px;
+    font-family: 'Tiny5', sans-serif;
+}
+
+.timer-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.timer-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    background: var(--button-color);
+    border: 2px solid #666;
+    border-radius: 3px;
+    min-width: 80px;
+    font-family: 'Tiny5', sans-serif;
+}
+
+.timer-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.timer-presets {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.preset-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    background: var(--button-color);
+    border: 1px solid #666;
+    border-radius: 3px;
+    font-family: 'Tiny5', sans-serif;
+}
+
+.timer-btn:active,
+.preset-btn:active {
+    transform: scale(0.98);
+}
+
+.music-player {
+    background: var(--window-bg);
+    padding: 20px;
+    width: 300px;
+    user-select: none;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.track-art {
+    width: 60px;
+    height: 60px;
+    background: #666;
+    margin-right: 15px;
+    background-image: url('icons/music.png');
+    background-size: cover;
+}
+
+.track-info {
+    flex-grow: 1;
+}
+
+.track-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.track-artist {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.player-controls {
+    margin-bottom: 20px;
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.control-buttons button {
+    background: var(--button-color);
+    border: 1px solid #666;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.progress-area {
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background: #666;
+    cursor: pointer;
+    position: relative;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background: var(--window-title-color);
+}
+
+.time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.volume-slider {
+    flex-grow: 1;
+}
+
+.playlist {
+    border: 1px solid #666;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.playlist-item {
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.playlist-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.playlist-item.active {
+    background: var(--window-title-color);
+    color: white;
+}
