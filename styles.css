@@ -103,6 +103,7 @@ body {
     flex-direction: column;
     resize: both;
     overflow: auto;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .window-title {
@@ -776,4 +777,49 @@ textarea:focus {
 .playlist-item.active {
     background: var(--window-title-color);
     color: white;
+}
+
+.taskbar-apps {
+    display: flex;
+    gap: 5px;
+    padding: 5px;
+    flex-grow: 1;
+}
+
+.taskbar-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 10px;
+    background: var(--button-color);
+    border: 2px solid;
+    border-color: #fff #808080 #808080 #fff;
+    cursor: pointer;
+    min-width: 100px;
+    height: 24px;
+    transition: all 0.2s;
+}
+
+.taskbar-item:hover {
+    background: #d0d0d0;
+}
+
+.taskbar-item.active {
+    border-color: #808080 #fff #fff #808080;
+    background: #b0b0b0;
+}
+
+.taskbar-icon {
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.taskbar-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
 }
