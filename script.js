@@ -118,16 +118,12 @@ class AppManager {
 
                         if (imageExtensions.includes(extension)) {
                             const imageSrc = fileSystem.loadFile(path);
-                            const imageViewerContent =
-                                AppManager.apps["Image Viewer"].create(imageSrc);
+                            const imageViewerContent = AppManager.apps["Gallery"].create(imageSrc);
                             windowManager.createWindow(filename, imageViewerContent);
                         } else if (textExtensions.includes(extension)) {
-                            const notepadContent = AppManager.apps.Notepad.create();
-                            const notepadWindow = windowManager.createWindow(
-                                filename,
-                                notepadContent
-                            );
-                            AppManager.apps.Notepad.init(notepadWindow, true);
+                            const notepadContent = AppManager.apps["Text Pad"].create();
+                            const notepadWindow = windowManager.createWindow(filename, notepadContent);
+                            AppManager.apps["Text Pad"].init(notepadWindow, true);
                             const textarea = notepadWindow.querySelector(".notepad-content");
                             textarea.value = fileSystem.loadFile(path);
                         }
@@ -552,17 +548,17 @@ class AppManager {
                         }
                     }
                     if (gameRunning) {
-                        switch (e.key) {
-                            case "ArrowUp":
+                        switch (e.key.toLowerCase()) {
+                            case "w":
                                 if (direction !== "down") direction = "up";
                                 break;
-                            case "ArrowDown":
+                            case "s":
                                 if (direction !== "up") direction = "down";
                                 break;
-                            case "ArrowLeft":
+                            case "a":
                                 if (direction !== "right") direction = "left";
                                 break;
-                            case "ArrowRight":
+                            case "d":
                                 if (direction !== "left") direction = "right";
                                 break;
                         }
@@ -1490,6 +1486,142 @@ class WindowManager {
     constructor() {
         this.windows = new Map();
         this.zIndex = 100;
+        this.taskbarItems = new Map();
+        this.setupTaskbar();
+    }
+
+    setupTaskbar() {
+        const taskbar = document.getElementById('taskbar');
+        const taskbarApps = document.createElement('div');
+        taskbarApps.className = 'taskbar-apps';
+        taskbar.insertBefore(taskbarApps, taskbar.firstChild);
+    }
+
+    createTaskbarItem(win, title) {
+        const taskbarApps = document.querySelector('.taskbar-apps');
+        const item = document.createElement('div');
+        item.className = 'taskbar-item';
+        
+        const icon = document.createElement('div');
+        icon.className = 'taskbar-icon';
+        icon.style.backgroundImage = `url(icons/${this.getAppIcon(title)})`;
+        
+        const label = document.createElement('span');
+        label.textContent = title;
+        
+        item.appendChild(icon);
+        item.appendChild(label);
+        
+        item.addEventListener('click', () => {
+            if (win.style.display === 'none') {
+                this.restoreWindow(win);
+            } else {
+                this.minimizeWindow(win);
+            }
+        });
+        
+        taskbarApps.appendChild(item);
+        this.taskbarItems.set(win, item);
+    }
+
+    getAppIcon(title) {
+        const iconMap = {
+            "File Nest": "file.png",
+            "Web Start": "browser.png",
+            "Text Pad": "notepad.png",
+            "NumPad": "calculator.png",
+            "Canvas": "paint.png",
+            "Gallery": "picture.png",
+            "Creator": "code.png",
+            "Arcade": "snake.png",
+            "Tweak": "gear.png",
+            "Messenger": "chat.png",
+            "Timer": "time.png",
+            "Tunebox": "music.png"
+        };
+        return iconMap[title] || "default.png";
+    }
+
+    minimizeWindow(win) {
+        const taskbarItem = this.taskbarItems.get(win);
+        if (!taskbarItem) return;
+
+        const winRect = win.getBoundingClientRect();
+        const taskbarRect = taskbarItem.getBoundingClientRect();
+
+        // Create a clone for animation
+        const clone = win.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.left = winRect.left + 'px';
+        clone.style.top = winRect.top + 'px';
+        clone.style.width = winRect.width + 'px';
+        clone.style.height = winRect.height + 'px';
+        clone.style.margin = '0';
+        clone.style.transition = 'all 0.3s ease-in-out';
+        clone.style.zIndex = '10000';
+        clone.style.pointerEvents = 'none';
+        document.body.appendChild(clone);
+
+        // Start animation
+        requestAnimationFrame(() => {
+            clone.style.transform = `translate(${taskbarRect.left - winRect.left}px, ${taskbarRect.top - winRect.top}px) scale(0.2)`;
+            clone.style.opacity = '0';
+        });
+
+        // Hide original window
+        win.style.display = 'none';
+        taskbarItem.classList.add('active');
+
+        // Remove clone after animation
+        setTimeout(() => {
+            clone.remove();
+        }, 300);
+    }
+
+    restoreWindow(win) {
+        const taskbarItem = this.taskbarItems.get(win);
+        if (!taskbarItem) return;
+
+        const taskbarRect = taskbarItem.getBoundingClientRect();
+        const winRect = {
+            left: parseInt(win.style.left),
+            top: parseInt(win.style.top),
+            width: win.offsetWidth,
+            height: win.offsetHeight
+        };
+
+        // Create clone for animation
+        const clone = win.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.left = taskbarRect.left + 'px';
+        clone.style.top = taskbarRect.top + 'px';
+        clone.style.width = taskbarRect.width + 'px';
+        clone.style.height = taskbarRect.height + 'px';
+        clone.style.transform = 'scale(0.2)';
+        clone.style.opacity = '0';
+        clone.style.transition = 'all 0.3s ease-in-out';
+        clone.style.zIndex = '10000';
+        clone.style.pointerEvents = 'none';
+        document.body.appendChild(clone);
+
+        // Start animation
+        requestAnimationFrame(() => {
+            clone.style.transform = 'scale(1)';
+            clone.style.opacity = '1';
+            clone.style.left = winRect.left + 'px';
+            clone.style.top = winRect.top + 'px';
+            clone.style.width = winRect.width + 'px';
+            clone.style.height = winRect.height + 'px';
+        });
+
+        // Show original window after animation
+        setTimeout(() => {
+            win.style.display = 'flex';
+            win.style.zIndex = this.zIndex++;
+            clone.remove();
+        }, 300);
+
+        taskbarItem.classList.remove('active');
     }
 
     createWindow(title, content) {
@@ -1514,6 +1646,7 @@ class WindowManager {
         this.makeDraggable(win);
         this.setupControls(win);
         this.windows.set(win, title);
+        this.createTaskbarItem(win, title);
 
         if (AppManager.apps[title]?.init) {
             AppManager.apps[title].init(win);
@@ -1582,6 +1715,11 @@ class WindowManager {
                     audio.currentTime = 0;
                 }
             }
+            const taskbarItem = this.taskbarItems.get(win);
+            if (taskbarItem) {
+                taskbarItem.remove();
+                this.taskbarItems.delete(win);
+            }
             win.remove();
             this.windows.delete(win);
             const icon = document.querySelector(`.icon[data-app="${title}"]`);
@@ -1591,7 +1729,7 @@ class WindowManager {
         };
 
         win.querySelector(".minimize-button").onclick = () => {
-            win.style.display = "none";
+            this.minimizeWindow(win);
         };
     }
 
@@ -1610,20 +1748,20 @@ const windowManager = new WindowManager();
 
 const desktopIcons = [
     { name: "File Nest", icon: "icons/file.png" },
-    { name: "Web Start", icon: "icons/browser.png" },
+    { name: "Tweak", icon: "icons/gear.png" },
     { name: "Text Pad", icon: "icons/notepad.png" },
     { name: "NumPad", icon: "icons/calculator.png" },
     { name: "Canvas", icon: "icons/paint.png" },
-    { name: "Gallery", icon: "icons/picture.png" },
-    { name: "Creator", icon: "icons/code.png" },
-    { name: "Arcade", icon: "icons/snake.png" },
-    { name: "Tweak", icon: "icons/gear.png" },
-    { name: "Messenger", icon: "icons/chat.png" },
     { name: "Timer", icon: "icons/time.png" },
+    { name: "Web Start", icon: "icons/browser.png" },
+    { name: "Gallery", icon: "icons/picture.png" },
     { name: "Tunebox", icon: "icons/music.png" },
+    { name: "Arcade", icon: "icons/snake.png" },
+    { name: "Messenger", icon: "icons/chat.png" },
+    { name: "Creator", icon: "icons/code.png" },
 ];
 
-const iconsPerColumn = 5;
+const iconsPerColumn = 6;
 const columns = Math.ceil(desktopIcons.length / iconsPerColumn);
 
 document.getElementById("desktop").innerHTML = Array(columns)
@@ -1713,17 +1851,20 @@ setInterval(updateClock, 1000);
 updateClock();
 
 function openWelcomeFile() {
-    const path = "notes/welcome.txt";
-    const content = fileSystem.loadFile(path);
+    const notepadContent = AppManager.apps["Text Pad"].create();
+    const notepadWindow = windowManager.createWindow("welcome.txt", notepadContent);
+    AppManager.apps["Text Pad"].init(notepadWindow, true);
 
-    const notepadContent = AppManager.apps.Notepad.create();
-    const notepadWindow = windowManager.createWindow("Welcome", notepadContent);
+    // Set the content after initialization
+    const content = fileSystem.loadFile("notes/welcome.txt");
     const textarea = notepadWindow.querySelector(".notepad-content");
-
-    textarea.value = content;
-    AppManager.apps.Notepad.init(notepadWindow, true);
+    if (textarea) {
+        textarea.value = content;
+        textarea.disabled = true;
+    }
 }
 
+// Then in the boot screen code, update the timing:
 const bootScreen = document.getElementById("boot-screen");
 let bootText = bootScreen.innerHTML;
 bootScreen.innerHTML = "";
@@ -1741,7 +1882,10 @@ function typeText() {
         setTimeout(() => {
             bootScreen.classList.add("fade-out");
             boot.play();
-            setTimeout(openWelcomeFile, 1500);
+            setTimeout(() => {
+                bootScreen.style.display = "none";  // Ensure boot screen is hidden
+                openWelcomeFile();  // Open welcome file after boot screen is hidden
+            }, 1500);
         }, 1000);
     }
 }
